@@ -1,0 +1,128 @@
+<?php
+
+/**
+ * Esperant System Philippines Corp
+ *
+ * LICENSE
+ *
+ * All codes that appears on this file is property of
+ * Esperant System Philippines Corp
+ * All files within this project is also property of ESP.
+ * Other third party libraries such as Zend Framework,
+ * PEAR, Smarty, Swiftmailer, SimpleTest, PHPUnit and the like
+ * are properties of their repective owners.
+ * All rights reserved.
+ * 
+ * Illegal copying, modifications, re-distribution and publishing
+ * of the source code without permission from the company
+ * is strictly prohibited.
+ *
+ * @author		Leonel Baer - Sep 25, 2009
+ * @copyright	Copyright (c) 2009 Esperant System Philippines Corp (http://esp.ph)
+ * @desc		Handles logging for the system activities
+ */
+ 
+ class Dc_Log
+ {
+	/**
+	 * @var Zend_Log_Writer_Stream
+	 */
+ 	protected $_writer;
+	
+	/**
+	 * @var Zend_Log
+	 */
+ 	protected $_logger;
+	
+	/**
+	 * Current log filename
+	 * 
+	 * @var string
+	 */
+ 	protected $_file;
+ 	
+	/**
+	 * @var Dc_Log
+	 */
+	protected static $_instance;
+	
+	/**
+	 * Returns the singleton instance of the object
+	 *
+	 * @return Dc_Log
+	 */
+	public static function getInstance()
+	{
+		if (self::$_instance === null)
+		{
+			self::$_instance = new self;
+		}
+		
+		return self::$_instance;
+	}
+	
+	/**
+	 * Enforces singleton pattern
+	 *
+	 * @return void
+	 */
+	protected function __construct()
+	{
+		// year folder for the log
+		$year = APPLICATION_PATH . '/data/logs/' . date('Y');
+		if (!is_dir($year))
+		{
+			// Create the yearly directory
+			mkdir($year, 0777);
+			
+			// Set permissions (must be manually set to fix umask issues)
+			chmod($year, 0777);
+		}
+		
+		// month folder for the log
+		$month = $year . '/' . date('m');
+		if (!is_dir($month))
+		{
+			// Create the monthly directory
+			mkdir($month, 0777);
+			
+			// Set permissions (must be manually set to fix umask issues)
+			chmod($month, 0777);
+		}
+		
+		// log file
+		$this->_file = $month . '/' . date('d') . '.log';
+		if (!file_exists($this->_file))
+		{
+			// Create the log file
+			file_put_contents($this->_file, '');
+			
+			// Allow anyone to write to log files
+			chmod($this->_file, 0666);
+		}
+		$this->_writer = new Zend_Log_Writer_Stream($this->_file);
+		$this->_logger = new Zend_Log($this->_writer);
+	}
+ 	
+	/**
+	 * Writes information log
+	 *
+	 * @param string $message
+	 * @return $this
+	 */
+ 	public function info($message)
+ 	{
+ 		return $this->_logger->info($message);
+ 	}
+
+	/**
+	 * Writes error / emergency logs
+	 *
+	 * @param string $message
+	 * @return $this
+	 */ 	
+  	public function emerg($message)
+ 	{
+ 		return $this->_logger->emerg($message);
+ 	}
+ }
